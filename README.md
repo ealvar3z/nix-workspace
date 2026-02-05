@@ -54,7 +54,6 @@ Designed for power users leveraging local or remote LLM assistants to accelerate
 ## Caveats
 
 - ⚠️ This setup assumes [bash](https://bashshell.com/) is your primary shell.
-    - **Fish shell history** is recorded globally, but each directory’s context means you can easily search your command history per type.
     - For best results, work on each workflow *type* in a separate directory. Give more complicated machines or setups their own directory.
 
 ---

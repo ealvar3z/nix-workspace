@@ -36,7 +36,7 @@
             {
               home = {
                 inherit (config) username homeDirectory;
-                stateVersion = "24.11";
+                stateVersion = "25.11";
               };
 
               # Protect Omarchy-managed directories

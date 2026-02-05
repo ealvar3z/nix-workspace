@@ -53,7 +53,7 @@ Designed for power users leveraging local or remote LLM assistants to accelerate
 
 ## Caveats
 
-- ⚠️ This setup assumes [bash](https://bashshell.com/) is your primary shell.
+- ⚠️ This setup assumes [bash](https://www.gnu.org/software/bash/) is your primary shell.
     - For best results, work on each workflow *type* in a separate directory. Give more complicated machines or setups their own directory.
 
 ---

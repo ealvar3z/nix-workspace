@@ -1,110 +1,201 @@
-{ pkgs, nixgl, ... }:
+{ config, pkgs, lib, ... }:
 
 {
-  nixpkgs.config.allowUnfree = true;
-  home.username = "eax";
-  home.homeDirectory = "/home/eax";
-  home.stateVersion = "23.11";
-
-  # Home Manager itself
-  programs.home-manager.enable = true;
-
-  # bash shell with everforest colored prompt
-  programs.bash = {
-    enable = true;
-    interactiveShellInit = ''
-      set -g theme_everforest_background "hard"
-      set -g themeeverforest_palette "medium"
-      # Custom minimal everforest prompt
-      function bash_prompt
-        set_color -o "#a7c080"
-        echo -n (whoami)"@"(hostname)" "
-        set_color -o "#7fbbb3"
-        echo -n (prompt_pwd)""
-        set_color -o "#dbbc7f"
-        echo -n "> "
-        set_color normal
-      end
-      source /usr/share/cachyos-bash-config/cachyos-config.bash
- zoxide init bash | source
-      direnv bash | source
-      # potentially disabling fastfetch
-      function bash_greeting
-      end
-      pyenv init - | source
-      pyenv virtualenv-init - | source
-      if test -e ~/.nix-profile/etc/profile.d/nix.bash
-        source ~/.nix-profile/etc/profile.d/nix.bash
-      end
-    '';
-    shellInit = ''
-      if test -e ~/.nix-profile/etc/profile.d/nix.bash
-        source ~/.nix-profile/etc/profile.d/nix.bash
-      end
-    '';
-    shellAliases = {
-      vim = "nvim";
-      c = "z";
-      gs = "git status";
-    };
-  };
-
-  programs.zoxide = {
-    enable = true;
-    enableFishIntegration = true;
-    options = [ "--cmd c" ];
-  };
-
-  # Editor: point to .config/nvim for neovim config
-  programs.neovim = {
-    enable = true;
-    viAlias = true;
-    vimAlias = true;
-  };
-
-  # Everforest theme for terminal (kitty), neovim, rofi
-
-  # VSCode
- programs.vscode = {
-    enable = true;
-  };
-
-  # Tool launcher: rofi with Alt+D binding, everforest theme via user config sync
-  programs.rofi = {
-    enable = true;
-    extraConfig = {
-      modi = "drun run";
-      show-icons = true;
-    };
-    theme = null; # for user-level theming via ~/.config/rofi
-  };
-
-  # Clipboard manager
-  services.clipman.enable = true;
-
-  # Tools
+  # Essential packages
   home.packages = with pkgs; [
-    nmap
-    rustscan
-    gobuster
-    wget
-    git
-    curl
-    tmux
-    zip
-    unzip
-    ruby
-    wireshark
-    ghidra
-    rofi
-    xh
-    wireguard-tools
-    rustc
-    cargo
-    vscode
-    # goose
-    xclip # for clipboard fallback
+    # Development tools
+    bat
     devenv
+    eza
+    fd
+    fzf
+    git
+    neovim
+    ripgrep
+    starship
+    tmux
+    zoxide
+
+    # System utilities
+    btop
+    curl
+    jq
+    tree
+    unzip
+    wget
+
+    # Modern CLI tools
+    bottom        # System monitor
+    delta         # Better git diff
+    dust          # Disk usage analyzer
+    lazygit       # Git TUI
+    procs         # Better ps
+    tokei         # Code statistics
   ];
 
+  # Environment variables
+  home.sessionVariables = {
+    EDITOR = "nvim";
+    VISUAL = "nvim";
+    BROWSER = "chromium";
+    PAGER = "less -R";
+    LANG = "en_US.UTF-8";
+  };
+
+  # Git configuration
+  programs.git = {
+    enable = true;
+    userName = "ealvar3z";  # Replace with your name
+    userEmail = "55966724+ealvar3z@users.noreply.github.com";  # Replace with your email
+
+    delta = {
+      enable = true;
+      options = {
+        theme = "Catppuccin Mocha";
+        line-numbers = true;
+        side-by-side = true;
+      };
+    };
+
+    aliases = {
+      st = "status";
+      co = "checkout";
+      br = "branch";
+      cm = "commit -m";
+      cam = "commit -am";
+    };
+  };
+
+  # Starship prompt configuration
+  programs.starship = {
+    enable = true;
+    settings = {
+      format = "$directory$git_branch$git_status$line_break$character";
+
+      character = {
+        success_symbol = "[❯](bold mauve)";
+        error_symbol = "[❯](bold red)";
+      };
+
+      directory = {
+        style = "bold blue";
+        truncate_to_repo = false;
+      };
+
+      git_branch = {
+        style = "bold purple";
+      };
+    };
+  };
+
+  # Tmux configuration
+  programs.tmux = {
+    enable = true;
+    terminal = "tmux-256color";
+    baseIndex = 1;
+    keyMode = "vi";
+    mouse = true;
+    prefix = "C-a";
+
+    plugins = with pkgs.tmuxPlugins; [
+      sensible
+      vim-tmux-navigator
+      yank
+    ];
+
+    extraConfig = ''
+      # True color support
+      set -ag terminal-overrides ",xterm-256color:RGB"
+    '';
+  };
+
+  # FZF configuration
+  programs.fzf = {
+    enable = true;
+    enableBashIntegration = true;
+    enableZshIntegration = true;
+
+    defaultOptions = [
+      "--height=40%"
+      "--layout=reverse"
+      "--border"
+      "--preview 'bat --color=always --style=numbers --line-range=:500 {}'"
+    ];
+  };
+
+  # Bash configuration
+  programs.bash = {
+    enable = true;
+
+    shellAliases = {
+      # Home Manager
+      hm = "home-manager switch --flake ~/.nix-workspace/home#main";
+
+      # ls replacements
+      ls = "eza --icons";
+      ll = "eza -la --icons";
+      la = "eza -la --icons";
+      lt = "eza --tree --icons";
+
+      # Modern replacements
+      cat = "bat";
+      grep = "rg";
+      find = "fd";
+
+      # Git shortcuts
+      g = "git";
+      gst = "git status";
+      gco = "git checkout";
+      gcm = "git commit -m";
+      gcam = "git commit -am";
+
+      # Navigation
+      ".." = "cd ..";
+      "..." = "cd ../..";
+      "...." = "cd ../../..";
+    };
+
+    initExtra = ''
+      # CRITICAL: Ensure Nix binaries are in PATH
+      export PATH="$HOME/.nix-profile/bin:$PATH"
+
+      # Source Nix daemon script if it exists (for multi-user installs)
+      if [ -e '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh' ]; then
+        . '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh'
+      fi
+
+      # Initialize starship prompt
+      eval "$(starship init bash)"
+
+      # Initialize zoxide
+      eval "$(zoxide init bash)"
+
+      # Include Omarchy bash layer (v2.1.x ships a ~/.bashrc that sources this)
+      if [ -f "$HOME/.local/share/omarchy/default/bash/rc" ]; then
+        . "$HOME/.local/share/omarchy/default/bash/rc"
+      fi
+
+      # Custom functions
+      mkcd() {
+        mkdir -p "$1" && cd "$1"
+      }
+
+      # Better cd with zoxide fallback
+      cd() {
+        if [ -d "$1" ] || [ -z "$1" ]; then
+          builtin cd "$@"
+        else
+          z "$@"
+        fi
+      }
+    '';
+  };
+
+  # Let Home Manager manage itself
+  programs.home-manager.enable = true;
+
+  # Enable XDG desktop integration
+  targets.genericLinux.enable = true;
+  xdg.enable = true;
+  xdg.mime.enable = true;
 }

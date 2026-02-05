@@ -1,41 +1,54 @@
 {
-  description = "eax's pen-test and workflow configuration";
+  description = "Home Manager configuration";
 
   inputs = {
-  nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-  home-manager = {
-    url = "github:nix-community/home-manager";
-    inputs.nixpkgs.follows = "nixpkgs";
+    # Use nixpkgs-unstable for the latest packages
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    home-manager = {
+      url = "github:nix-community/home-manager";
+      # This ensures home-manager uses the same nixpkgs version
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
-  hyprland = {
-    url = "git+https://github.com/hyprwm/Hyprland?submodules=1";
-    inputs.nixpkgs.follows = "nixpkgs";
-  };
-  nixgl = {
-    url = "github:guibou/nixGL";
-  };
-};
 
-  outputs = { self, nixpkgs, home-manager, nixgl, ... }:
+  outputs = { nixpkgs, home-manager, ... }:
     let
-      system = "x86_64-linux";
-      overlays = [ (import ./overlays/goose-overlay.nix) ];
-      pkgs = import nixpkgs { inherit system overlays; };
+      # Define user configurations for different devices
+      userConfigs = {
+        # Primary user configuration
+        main = {
+          username = "eax";
+          homeDirectory = "/home/eax";
+        };
+
+        # Add more configurations as needed
+        # work = {
+        #   username = "<work-username>";
+        #   homeDirectory = "/home/<work-username>";
+        # };
+      };
+
+      mkHomeConfig = name: config:
+        home-manager.lib.homeManagerConfiguration {
+          pkgs = nixpkgs.legacyPackages.x86_64-linux;
+          modules = [
+            ./home.nix
+            {
+              home = {
+                inherit (config) username homeDirectory;
+                stateVersion = "24.11";
+              };
+
+              # Protect Omarchy-managed directories
+              home.file.".config/omarchy".enable = false;
+              home.file.".config/hypr".enable = false;
+              home.file.".config/alacritty".enable = false;
+              home.file.".config/ghostty".enable = false;
+              home.file.".config/btop/themes".enable = false;
+            }
+          ];
+        };
     in {
-      homeConfigurations.eax = home-manager.lib.homeManagerConfiguration {
-        inherit pkgs;
-        modules = [ ./home.nix ];
-        extraSpecialArgs = { inherit system; nixgl = nixgl.packages.${system}; };
-
-      };
-
-      nixosConfigurations.eax = nixpkgs.lib.nixosSystem {
-        inherit system;
-        modules = [
-          ./nixos-config.nix
-          { home-manager.users.eax = import ./home.nix; }
-          home-manager.nixosModules.home-manager
-        ];
-      };
+      homeConfigurations = builtins.mapAttrs mkHomeConfig userConfigs;
     };
 }

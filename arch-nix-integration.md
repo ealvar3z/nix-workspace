@@ -15,17 +15,17 @@ Works on Omarchy v3.1.7
 
 ### Table of Contents
 ---
-1. Prerequisites
-1. Understanding the Stack
-1. Installation
-1. Configuration
-1. Shell Setup
-1. Home Manager Command Setup
-1. Applying Configuration
-1. Verification
-1. Troubleshooting
-1. Maintenance
-1. Optional Features
+1. [Prerequisites](#Prerequisites)
+1. [Understanding the Stack](#Understanding)
+1. [Installation](#Installation)
+1. [Configuration]
+1. [Shell Setup]
+1. [Home Manager Command Setup]
+1. [Applying Configuration]
+1. [Verification]
+1. [Troubleshooting]
+1. [Maintenance]
+1. [Optional Features]
 
 ### Prerequisites
 ---
@@ -34,33 +34,45 @@ Works on Omarchy v3.1.7
 - Internet Connection: Required for downloading packages
 - sudo privileges: For system-wide configuration changes
 - Git: For version control of your configuration
-Understanding the stack
-What is Nix?
+
+### Understanding the stack
+---
+**What is Nix?**
+
 Nix is a purely functional package manager that ensures reproducible builds and allows multiple versions of packages to coexist. Key benefits:
 
-Atomic upgrades and rollbacks
-Declarative configuration
-No dependency conflicts
-Per-user package management
-What is Home Manager?
+- Atomic upgrades and rollbacks
+- Declarative configuration
+- No dependency conflicts
+- Per-user package management
+
+**What is Home Manager?**
+
 Home Manager uses Nix to manage your user environment declaratively. It handles:
 
-Dotfile management
-User-specific package installation
-Application configuration
-Environment variables
-What is Omarchy?
+- Dotfile management
+- User-specific package installation
+- Application configuration
+- Environment variables
+
+**What is Omarchy?**
+
 Omarchy is your existing shell environment configuration system that manages:
 
-Hyprland window manager settings
-Alacritty terminal configuration
-System themes (Catppuccin, Gruvbox, etc.)
-Shell customizations
-Integration strategy
+- Hyprland window manager settings
+- Ghostty terminal configuration
+- System themes (Catppuccin, Gruvbox, etc.)
+- Shell customizations
+
+**Integration strategy**
+
 We'll configure Home Manager to manage packages and configurations while respecting Omarchy's existing management of specific directories and files.
 
-Installation
-Step 1: Install Nix package manager
+### Installation
+---
+
+### Step 1: Install Nix package manager
+```console
 # Check if Nix is already installed
 which nix
 
@@ -72,15 +84,20 @@ source ~/.bashrc  # or ~/.zshrc if using zsh
 
 # Verify installation
 nix --version
+```
+
 💡 Why daemon mode? The --daemon flag installs Nix in multi-user mode, which:
 
-Provides better build isolation and security through dedicated build users
-Enables concurrent builds and downloads
-Prevents privilege escalation attacks
-Is required for certain Nix features like sandboxing
-Step 2: Enable Nix Flakes
-Flakes provide reproducible, declarative, and composable package management.
+- Provides better build isolation and security through dedicated build users
+- Enables concurrent builds and downloads
+- Prevents privilege escalation attacks
+- Is required for certain Nix features like sandboxing
+```
 
+### Step 2: Enable Nix Flakes
+
+Flakes provide reproducible, declarative, and composable package management.
+```console
 # Create Nix configuration directory if it doesn't exist
 sudo mkdir -p /etc/nix
 
@@ -92,6 +109,7 @@ sudo systemctl restart nix-daemon
 
 # Verify flakes are enabled
 nix flake --help
+
 💡 Why Flakes? Flakes are marked as "experimental" but are widely used because they:
 
 Lock all dependencies to exact versions (via flake.lock)
@@ -99,7 +117,10 @@ Ensure everyone gets identical package versions
 Enable pure evaluation - builds are reproducible across machines
 Provide a standard structure for Nix projects
 Make it easy to share configurations via Git
-Step 3: Create your project structure
+```
+
+### Step 3: Create your project structure
+```console
 # Create directory for your dotfiles
 mkdir -p ~/.dotfiles/home-manager
 cd ~/.dotfiles/home-manager
@@ -107,9 +128,12 @@ cd ~/.dotfiles/home-manager
 # Initialize git repository
 git init
 ⚠️ Important: Git initialization is required for Flakes to work. Nix Flakes use Git to track which files belong to your project. Without Git, you'll get errors about "unclean" working directories.
+```
 
-Configuration
-Step 4: Create Flake configuration
+### Configuration
+---
+#### Step 4: Create Flake configuration
+```nix
 Create ~/.dotfiles/home-manager/flake.nix:
 
 {
@@ -190,7 +214,9 @@ Multiple user profiles (home, work, laptop, whatever you want)
 Easy switching between configurations
 Shared base configuration with per-device customization
 Single repository for all your machines
-Step 5: Create Home configuration
+```
+
+### Step 5: Create Home configuration
 Create ~/.dotfiles/home-manager/home.nix:
 
 { config, pkgs, lib, ... }:

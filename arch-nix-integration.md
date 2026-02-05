@@ -18,8 +18,8 @@ Works on Omarchy v3.1.7
 1. [Prerequisites](#Prerequisites)
 1. [Understanding the Stack](#Understanding)
 1. [Installation](#Installation)
-1. [Configuration]
-1. [Shell Setup]
+1. [Configuration](#Configuration)
+1. [Shell Setup](#Shell)
 1. [Home Manager Command Setup]
 1. [Applying Configuration]
 1. [Verification]
@@ -92,6 +92,7 @@ nix --version
 - Enables concurrent builds and downloads
 - Prevents privilege escalation attacks
 - Is required for certain Nix features like sandboxing
+```
 ```
 
 ### Step 2: Enable Nix Flakes
@@ -218,7 +219,7 @@ Single repository for all your machines
 
 ### Step 5: Create Home configuration
 Create ~/.dotfiles/home-manager/home.nix:
-
+```nix
 { config, pkgs, lib, ... }:
 
 {
@@ -386,20 +387,23 @@ installed via Nix
 xdg.enable: Manages XDG base directories
 xdg.mime.enable: Handles file type associations
 Without these, Nix-installed GUI apps won't appear in your application menu
-Shell setup
-Understanding PATH management
-💡 The PATH challenge: When you first install Nix and Home Manager,
-there's a chicken-and-egg problem:
+```
 
-Home Manager manages your PATH through shell configuration
-But Home Manager itself needs to be in PATH to run
-Until you run the first home-manager switch, it's not directly accessible
-We solve this by explicitly managing PATH in our shell configuration, ensuring
-all Nix tools (including Home Manager) are always available.
+### Shell setup
+**Understanding PATH management**
+> 💡 The PATH challenge: When you first install Nix and Home Manager,
+> there's a chicken-and-egg problem:
+> 
+> - Home Manager manages your PATH through shell configuration
+> - But Home Manager itself needs to be in PATH to run
+> - Until you run the first home-manager switch, it's not directly accessible
+> 
+> We solve this by explicitly managing PATH in our shell configuration, ensuring
+> all Nix tools (including Home Manager) are always available.
 
-Step 6A: Example Bash configuration
+### Step 6A: Example Bash configuration
 Add to home.nix if using Bash:
-
+```console
   # Bash configuration
   programs.bash = {
     enable = true;
@@ -472,160 +476,49 @@ hm = "home-manager switch --flake ~/.dotfiles/home-manager#main";
 Explicit PATH management: The export PATH="$HOME/.nix-profile/bin:$PATH"
 line:
 
-Ensures all Nix-installed tools are available immediately
-Makes home-manager command work without nix run
-Preserves existing PATH entries (including Omarchy's)
-Uses .nix-profile which automatically updates with your current profile
-Nix daemon script: The conditional sourcing:
+- Ensures all Nix-installed tools are available immediately
+- Makes home-manager command work without nix run
+- Preserves existing PATH entries (including Omarchy's)
+- Uses .nix-profile which automatically updates with your current profile
 
-Handles multi-user Nix installations properly
-Sets up additional environment variables Nix needs
-Only runs if the file exists (avoiding errors on single-user installs)
-PATH priority after this configuration:
+**Nix daemon script**: The conditional sourcing:
 
-~/.nix-profile/bin (Home Manager installed tools)
-Existing PATH entries (including Omarchy's)
-System paths (/usr/bin, etc.)
-Initialization order:
+- Handles multi-user Nix installations properly
+- Sets up additional environment variables Nix needs
+- Only runs if the file exists (avoiding errors on single-user installs)
 
-PATH setup runs first
-Tool initializations (starship, zoxide) run next
-Omarchy configs are sourced last. This ensures proper precedence and allows
-Omarchy overrides
-Step 6B: Example Zsh configuration
-Add to home.nix if using Zsh:
+**PATH priority** after this configuration:
 
-  # Zsh configuration
-  programs.zsh = {
-    enable = true;
+1. `~/.nix-profile/bin` (Home Manager installed tools)
+1. Existing PATH entries (including Omarchy's)
+1. System paths (/usr/bin, etc.)
 
-    # Oh My Zsh
-    oh-my-zsh = {
-      enable = true;
-      theme = "robbyrussell";  # Will be overridden by starship
-      plugins = [
-        "git"
-        "docker"
-        "kubectl"
-        "terraform"
-        "aws"
-        "npm"
-        "pip"
-        "python"
-        "sudo"
-        "command-not-found"
-        "colored-man-pages"
-        "extract"
-      ];
-    };
+**Initialization order**:
 
-    shellAliases = {
-      # Home Manager
-hm = "home-manager switch --flake ~/.dotfiles/home-manager#main";
+1. PATH setup runs first
+1. Tool initializations (starship, zoxide) run next
+1. Omarchy configs are sourced last. This ensures proper precedence and allows Omarchy overrides
+```
 
-      # ls replacements
-      ls = "eza --icons";
-      ll = "eza -la --icons";
-      la = "eza -la --icons";
-      lt = "eza --tree --icons";
+### Step 6B: Example Zsh configuration [see here](https://github.com/basecamp/omarchy/discussions/987#:~:text=Step%206B%3A%20Example%20Zsh%20configuration)
+### Alternative: Omarchy PATH integration
+> 💡 Alternative Approach: If you prefer to keep PATH management outside of Home Manager, you can add this directly to your shell rc:
 
-      # Modern replacements
-      cat = "bat";
-      grep = "rg";
-      find = "fd";
-
-      # Git shortcuts
-      g = "git";
-      gst = "git status";
-      gco = "git checkout";
-      gcm = "git commit -m";
-      gcam = "git commit -am";
-
-      # Navigation
-      ".." = "cd ..";
-      "..." = "cd ../..";
-      "...." = "cd ../../..";
-    };
-
-    initExtra = ''
-      # CRITICAL: Ensure Nix binaries are in PATH
-      export PATH="$HOME/.nix-profile/bin:$PATH"
-
-      # Source Nix daemon script if it exists (for multi-user installs)
-      if [ -e '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh' ]; then
-        . '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh'
-      fi
-
-      # Initialize starship prompt
-      eval "$(starship init zsh)"
-
-      # Initialize zoxide
-      eval "$(zoxide init zsh)"
-
-      # Omarchy does not ship a zsh rc in v2.1.x; keep PATH and init in HM/zshrc.
-      # If you need Omarchy CLI tools on PATH:
-      export PATH="$HOME/.local/share/omarchy/bin:$PATH"
-
-      # Custom functions
-      mkcd() {
-        mkdir -p "$1" && cd "$1"
-      }
-
-      # Better cd with zoxide fallback
-      cd() {
-        if [ -d "$1" ] || [ -z "$1" ]; then
-          builtin cd "$@"
-        else
-          z "$@"
-        fi
-      }
-
-      # Extract function for archives
-      extract() {
-        if [ -f "$1" ]; then
-          case "$1" in
-            *.tar.bz2) tar xjf "$1" ;;
-            *.tar.gz) tar xzf "$1" ;;
-            *.tar.xz) tar xJf "$1" ;;
-            *.zip) unzip "$1" ;;
-            *.rar) unrar x "$1" ;;
-            *.7z) 7z x "$1" ;;
-            *) echo "'$1' cannot be extracted" ;;
-          esac
-        else
-          echo "'$1' is not a valid file"
-        fi
-      }
-    '';
-  };
-💡 Oh My Zsh integration notes:
-
-Theme override: We set a theme but Starship overrides it because:
-
-Oh My Zsh requires a theme to be set
-Starship provides a more powerful, cross-shell prompt
-This prevents Oh My Zsh from complaining about missing themes
-Plugin selection: These plugins are chosen because:
-
-They don't conflict with our Nix-installed tools
-They provide completions and conveniences
-They're maintained by the Oh My Zsh community
-Heavy plugins that slow down shell startup are avoided
-Alternative: Omarchy PATH integration
-💡 Alternative Approach: If you prefer to keep PATH management outside of
-Home Manager, you can add this directly to your shell rc:
-
+```console
 # Bash (Omarchy v2.1.x ships a ~/.bashrc): add to ~/.bashrc
 export PATH="$HOME/.nix-profile/bin:$PATH"
 
 # Zsh: add to ~/.zshrc (Omarchy does not ship a zsh rc)
 export PATH="$HOME/.nix-profile/bin:$PATH"
+
 This approach:
 
-Keeps PATH setup local to your shell rc
-Makes Nix tools available without modifying Home Manager config
-Might be preferred if you centralize PATH logic outside HM
-Home Manager command setup
+- Keeps PATH setup local to your shell rc
+- Makes Nix tools available without modifying Home Manager config
+- Might be preferred if you centralize PATH logic outside HM
+```
+
+### Home Manager command setup
 The problem
 When using Home Manager with flakes, the home-manager command is not installed as a package. Instead, it's accessed through nix run home-manager. This creates a chicken-and-egg problem on new machines where you need Home Manager to set up your environment, but Home Manager itself isn't directly accessible.
 

@@ -1,7 +1,7 @@
-# HTB Devenv LLM Workspace
+# Nix Workspaces
 
 This repository provides a modular, reproducible development/working environments. It uses [devenv](https://devenv.sh/) and [Nix flakes](https://nixos.wiki/wiki/Flakes) to manage isolated environments by *workflow type* (e.g., `blockchain`, `forensics`, `windows-ad`).  
-Designed for power users leveraging local or remote LLM assistants to accelerate workflows. An example-prompt.md file is given for my preferred client. I find that a jailbreak is no longer needed. 
+Designed for power users leveraging local or remote LLM assistants to accelerate workflows if desired. An example-prompt.md file is given for my preferred client. I find that a jailbreak is no longer needed. 
 
 ## Features
 

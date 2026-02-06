@@ -43,20 +43,12 @@
   };
 
   # Git configuration
-  programs.git = {
+  programs.git.settings = {
     enable = true;
-    userName = "ealvar3z";  # Replace with your name
-    userEmail = "55966724+ealvar3z@users.noreply.github.com";  # Replace with your email
-
-    delta = {
-      enable = true;
-      options = {
-        theme = "Catppuccin Mocha";
-        line-numbers = true;
-        side-by-side = true;
-      };
+    user = {
+      name = "ealvar3z";  # Replace with your name
+      email = "55966724+ealvar3z@users.noreply.github.com";  # Replace with your email
     };
-
     aliases = {
       st = "status";
       co = "checkout";
@@ -65,6 +57,14 @@
       cam = "commit -am";
     };
   };
+  
+  programs.delta.options = {
+      enable = true;
+      theme = "Catppuccin Mocha";
+      line-numbers = true;
+      side-by-side = true;
+  };
+
 
   # Starship prompt configuration
   programs.starship = {

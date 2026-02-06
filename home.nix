@@ -129,7 +129,10 @@
 
     shellAliases = {
       # Home Manager
-      hm = "home-manager switch --flake ~/repos/nix-workspace/home#main";
+      hm = "home-manager switch --flake $HOME/repos/nix-workspace#main";
+
+      c = "clear";
+      x = "exit";
 
       # ls replacements
       ls = "eza --icons";

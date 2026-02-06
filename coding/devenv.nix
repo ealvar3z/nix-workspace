@@ -8,6 +8,7 @@
     pkgs.python312
     pkgs.nodejs
   ];
+  cachix.enable = false;
   enterShell = ''
     exec bash
   '';
